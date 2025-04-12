@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.hbrs.ooka</groupId>
-    <artifactId>OOKAUebungNr1</artifactId>
+    <artifactId>ProductManagment</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
@@ -40,9 +40,33 @@
 
     <!-- Build configuration. Hier sollte noch ein Plugin für
      das Packaging hinzugefügt werden. Das Standard-Plugin von Maven
-     fügt leider kein Abhängigkeiten hinzu. Bitte gerne nach Alternativen suchen.
+     fügt leider keine Abhängigkeiten hinzu. Bitte gerne nach Alternativen suchen.
      ChatGPT liefert hier gute Beispiele (denkbares Prompt: How can I include a jar-File
      into a jar file when using maven? :-)-->
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>org.hbrs.ooka.uebung1.ProductManagement</mainClass>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

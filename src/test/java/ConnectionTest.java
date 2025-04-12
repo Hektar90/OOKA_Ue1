@@ -2,6 +2,7 @@ import org.hbrs.ooka.uebung1.DatabaseConnection;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,15 +21,15 @@ public class ConnectionTest {
     private Connection connection;
 
     @BeforeEach
-    public void setup()  {
+    public void setup() {
         DatabaseConnection databaseConnection = new DatabaseConnection();
         try {
             connection = databaseConnection.getConnection();
 
             String sql = "CREATE TABLE IF NOT EXISTS products ("
-                + "id INT PRIMARY KEY AUTO_INCREMENT, "
-                + "name VARCHAR(255) NOT NULL, "
-                + "price DOUBLE NOT NULL)";
+                    + "id INT PRIMARY KEY AUTO_INCREMENT, "
+                    + "name VARCHAR(255) NOT NULL, "
+                    + "price DOUBLE NOT NULL)";
 
             Statement stmt = connection.createStatement();
             stmt.execute(sql);
@@ -45,8 +46,7 @@ public class ConnectionTest {
         Product productTarget = insertProduct();
 
         // Lesen des Produkts aus der Datenbank (READ)
-        List<Product> products = readProducts();
-        Product productActual = products.get(0);
+        Product productActual = readProductByName("My Motor 1.0");
 
         // Vergleich des Produkts mit dem erwarteten Produkt (Assertion)
         assertEquals(productTarget, productActual);
@@ -56,12 +56,14 @@ public class ConnectionTest {
     public void deleteSuff() {
         // SQL für die Löschung der Tabelle (Vermeidung von Datenmüll)
         // String sql = "DROP TABLE products"; --> ToDo bei Ihnen ;-)
-        try {
-            // Diese Verbindung könnte im Rahmen der Übung Nr. 1 auch über die Methode closeConnection() geschlossen werden
-            // (vgl. Interface ProductManagementInt)
-            this.connection.close();
+        try (Connection connection = DatabaseConnection.getConnection();) {
+//            String sql = "DROP TABLE products";
+            String sql = "TRUNCATE TABLE products";
+            PreparedStatement pstmt = connection.prepareStatement(sql);
+            pstmt.executeUpdate();
         } catch (SQLException e) {
             // TODO Auto-generated catch block
+            e.printStackTrace();
         }
     }
 
@@ -69,20 +71,47 @@ public class ConnectionTest {
         List<Product> products = new ArrayList<>();
         String sql = "SELECT * FROM products";
 
-        try {
-            PreparedStatement pstmt = this.connection.prepareStatement(sql);
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = connection.prepareStatement(sql);) {
+
+            ResultSet resultSet = pstmt.executeQuery();
+            while (resultSet.next()) {
                 products.add(new Product(
-                        rs.getInt("id"),
-                        rs.getString("name"),
-                        rs.getDouble("price")
-                ));
+                                resultSet.getInt("id"),
+                                resultSet.getString("name"),
+                                resultSet.getDouble("price")
+                        )
+                );
             }
+            System.out.println("Product inserted successfully.");
         } catch (Exception e) {
             e.printStackTrace();
         }
         return products;
+    }
+
+    private Product readProductByName(String name) {
+        Product product = null;
+        String sql = "SELECT * FROM products WHERE name = ?";
+
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = connection.prepareStatement(sql);
+        ) {
+
+            pstmt.setString(1, name);
+            ResultSet resultSet = pstmt.executeQuery();
+            while (resultSet.next()) {
+                product = new Product(
+                        resultSet.getInt("id"),
+                        resultSet.getString("name"),
+                        resultSet.getDouble("price")
+                );
+            }
+            System.out.println("Product inserted successfully.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return product;
     }
 
     private Product insertProduct() {

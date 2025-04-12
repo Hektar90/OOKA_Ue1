@@ -42,15 +42,13 @@ public class Product {
     public String toString() {
         // Wir lassen mal die ID eines Produkts weg, da diese nicht immer gesetzt ist bzw. ohnehin
         // über Auto-Increment in der Datenbank gesetzt wird.
-        return "Product{" +
-                ", name='" + name + '\'' +
-                ", price=" + price +
-                '}';
+        return String.format("Product{name= %s, price= %.2f}", name, price);
     }
 
     /**
      * Vergleich von zwei Produkten anhand des Namens und des Preises.
      * Wichtig für den Junit-Test!!
+     *
      * @param o
      * @return
      */

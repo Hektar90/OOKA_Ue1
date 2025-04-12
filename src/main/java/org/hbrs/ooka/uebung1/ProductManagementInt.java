@@ -19,7 +19,13 @@ import java.util.List;
 
 public interface ProductManagementInt {
     // Auswahl von CRUD-Methoden (weitere können hinzugefügt werden)
-    public List<Product> getProductByName(String name);
+    public Product getProductByName(String name);
+
+    public List<Product> getAllProducts();
+
+    public void saveProduct(Product product);
+
+    public void deleteProduct(Product product);
 
     // Lifecycle-Methoden (dürfen nicht verändert werden, siehe Spezifikation im Kommentar
 
