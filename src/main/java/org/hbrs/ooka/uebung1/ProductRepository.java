@@ -8,11 +8,16 @@ import java.util.List;
 
 public class ProductRepository {
 
+    DatabaseConnection databaseConnection;
+
+    public ProductRepository(DatabaseConnection databaseConnection) {
+        this.databaseConnection = databaseConnection;
+    }
+
     public void save(Product product) {
         String sql = "INSERT INTO products (name, price) VALUES (?, ?)";
 
-        try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = connection.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = databaseConnection.getConnection().prepareStatement(sql)) {
 
             pstmt.setString(1, product.getName());
             pstmt.setDouble(2, product.getPrice());
@@ -27,8 +32,7 @@ public class ProductRepository {
         List<Product> products = new ArrayList<>();
         String sql = "SELECT * FROM products";
 
-        try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = connection.prepareStatement(sql);
+        try (PreparedStatement pstmt = databaseConnection.getConnection().prepareStatement(sql);
              ResultSet rs = pstmt.executeQuery()) {
 
             while (rs.next()) {
@@ -50,8 +54,7 @@ public class ProductRepository {
         String sql = "SELECT * FROM products WHERE id = ?";
         Product product = null;
 
-        try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = connection.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = databaseConnection.getConnection().prepareStatement(sql)) {
 
             pstmt.setInt(1, id);
             ResultSet rs = pstmt.executeQuery();
@@ -75,8 +78,7 @@ public class ProductRepository {
         String sql = "SELECT * FROM products WHERE name = ?";
         Product product = null;
 
-        try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = connection.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = databaseConnection.getConnection().prepareStatement(sql)) {
 
             pstmt.setString(1, name);
             ResultSet rs = pstmt.executeQuery();
@@ -99,8 +101,7 @@ public class ProductRepository {
     public void update(Product product) {
         String sql = "UPDATE products SET name = ?, price = ? WHERE id = ?";
 
-        try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = connection.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = databaseConnection.getConnection().prepareStatement(sql)) {
 
             pstmt.setString(1, product.getName());
             pstmt.setDouble(2, product.getPrice());
@@ -115,8 +116,7 @@ public class ProductRepository {
     public void delete(int id) {
         String sql = "DELETE FROM products WHERE id = ?";
 
-        try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = connection.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = databaseConnection.getConnection().prepareStatement(sql)) {
 
             pstmt.setInt(1, id);
             pstmt.executeUpdate();

@@ -14,11 +14,19 @@ public class ProductController {
     private SessionState currentState = SessionState.SESSION_CLOSED;
 
     private final ProductRepository productRepository;
-    private final Caching<String,Product> caching;
+    private final DatabaseConnection databaseConnection;
+    private final Caching caching;
 
-    public ProductController(Caching<String,Product> caching) {
+    public ProductController(Caching caching) {
         this.caching = caching;
-        this.productRepository = new ProductRepository();
+        this.databaseConnection = new DatabaseConnection();
+        this.productRepository = new ProductRepository(databaseConnection);
+    }
+
+    public ProductController() {
+        this.caching = null; // Caching deaktiviert
+        this.databaseConnection = new DatabaseConnection();
+        this.productRepository = new ProductRepository(databaseConnection);
     }
 
     public Product getProductByName(String name) {
@@ -26,11 +34,14 @@ public class ProductController {
             throw new IllegalStateException("Session ist nicht geöffnet – Zugriff nicht erlaubt.");
         }
 
-        Product cachedProduct = caching.get(name);
+        if (caching != null) {
+            Product cachedProduct = caching.get(name);
 
-        if (cachedProduct != null) {
-            return cachedProduct;
+            if (cachedProduct != null) {
+                return cachedProduct;
+            }
         }
+        
         return productRepository.readProductByName(name);
     }
 
@@ -48,16 +59,22 @@ public class ProductController {
         if (currentState != SessionState.SESSION_OPEN) {
             throw new IllegalStateException("Session ist nicht geöffnet – Zugriff nicht erlaubt.");
         }
-        caching.put(product.getName(), product);
+
+        if (caching != null) {
+            caching.put(product.getName(), product);
+        }
+
         productRepository.save(product);
     }
 
-    public void openSession(){
+    public void openSession() {
         currentState = SessionState.SESSION_OPEN;
+        databaseConnection.openConnection();
     }
 
-    public void closeSession(){
+    public void closeSession() {
         currentState = SessionState.SESSION_CLOSED;
+        databaseConnection.closeConnection();
     }
 
 }

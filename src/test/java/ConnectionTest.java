@@ -1,7 +1,5 @@
 import org.hbrs.ooka.uebung1.DatabaseConnection;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +13,9 @@ import java.sql.Statement;
 import java.sql.ResultSet;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class ConnectionTest {
 
     private Connection connection;
@@ -24,6 +24,8 @@ public class ConnectionTest {
     public void setup() {
         DatabaseConnection databaseConnection = new DatabaseConnection();
         try {
+            databaseConnection.openConnection();
+
             connection = databaseConnection.getConnection();
 
             String sql = "CREATE TABLE IF NOT EXISTS products ("
@@ -50,16 +52,35 @@ public class ConnectionTest {
 
         // Vergleich des Produkts mit dem erwarteten Produkt (Assertion)
         assertEquals(productTarget, productActual);
+
+        deleteProductByName("My Motor 1.0");
+
+        productActual = readProductByName("My Motor 1.0");
+
+        assertNull(productActual);
+
     }
 
     @AfterEach
-    public void deleteSuff() {
+    public void deleteStuff() {
         // SQL für die Löschung der Tabelle (Vermeidung von Datenmüll)
         // String sql = "DROP TABLE products"; --> ToDo bei Ihnen ;-)
-        try (Connection connection = DatabaseConnection.getConnection();) {
+        try{
 //            String sql = "DROP TABLE products";
             String sql = "TRUNCATE TABLE products";
             PreparedStatement pstmt = connection.prepareStatement(sql);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
+    public void deleteProductByName(String name) {
+        try{
+            String sql = "DELETE FROM products WHERE name = ?";
+            PreparedStatement pstmt = connection.prepareStatement(sql);
+            pstmt.setString(1, name);
             pstmt.executeUpdate();
         } catch (SQLException e) {
             // TODO Auto-generated catch block
@@ -71,8 +92,7 @@ public class ConnectionTest {
         List<Product> products = new ArrayList<>();
         String sql = "SELECT * FROM products";
 
-        try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = connection.prepareStatement(sql);) {
+        try (PreparedStatement pstmt = connection.prepareStatement(sql);) {
 
             ResultSet resultSet = pstmt.executeQuery();
             while (resultSet.next()) {
@@ -94,9 +114,7 @@ public class ConnectionTest {
         Product product = null;
         String sql = "SELECT * FROM products WHERE name = ?";
 
-        try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = connection.prepareStatement(sql);
-        ) {
+        try (PreparedStatement pstmt = connection.prepareStatement(sql);) {
 
             pstmt.setString(1, name);
             ResultSet resultSet = pstmt.executeQuery();
@@ -129,5 +147,10 @@ public class ConnectionTest {
         }
 
         return productTarget;
+    }
+
+    @AfterAll
+    public void closeConnection() throws SQLException {
+        connection.close();
     }
 }
